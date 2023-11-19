@@ -37,7 +37,7 @@ public class AuthorLiaison implements AuthorDao {
             while (resultSet.next()) {
                 int authorId = resultSet.getInt("author_id");
                 String name = resultSet.getString("name");
-                char gender = resultSet.getString("sex").charAt(0);
+                char gender = resultSet.getString("gender").charAt(0);
                 Author author = new Author(authorId, name, gender);
                 authors.add(author);
             }

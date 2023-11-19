@@ -9,7 +9,7 @@ public class DBConnection {
  private DBConnection(){
          try {
              connection = DriverManager.getConnection(
-                     "jdbc:postgresql://localhost/library_management",
+                     "jdbc:postgresql://localhost:5432/library_management",
                      System.getenv("db_user"),
                      System.getenv("db_password")
              );
