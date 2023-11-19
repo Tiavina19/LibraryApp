@@ -1,5 +1,6 @@
 package Repository;
 
+import model.Author;
 import model.Subscribers;
 
 import java.sql.Connection;
@@ -8,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static Repository.DBConnection.getConnection;
 
 public class SubscribersLiaison {
     private Connection connection;
@@ -28,36 +31,23 @@ public class SubscribersLiaison {
 
     public List<Subscribers> findAll() throws SQLException {
         List<Subscribers> subscribers = new ArrayList<>();
-        String query = "SELECT * FROM Subscribers";
+        try {
+            Connection connection = getConnection();
+            String query = "SELECT * FROM subscribers";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Subscribers subscriber = new Subscribers();
-                subscriber.setSubscriberId(rs.getInt("subscriber_id"));
-                subscriber.setName(rs.getString("name"));
-                subscriber.setAddress(rs.getString("address"));
+            while (resultSet.next()) {
+                int subscriberId = resultSet.getInt("subscriber_id");
+                String name = resultSet.getString("name");
+                String address = resultSet.getString("address");
+                Subscribers subscriber = new Subscribers(subscriberId, name, address );
                 subscribers.add(subscriber);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return subscribers;
-    }
-
-    public Subscribers findById(int subscriberId) throws SQLException {
-        String query = "SELECT * FROM Subscribers WHERE subscriber_id = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, subscriberId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Subscribers subscriber = new Subscribers();
-                subscriber.setSubscriberId(rs.getInt("subscriber_id"));
-                subscriber.setName(rs.getString("name"));
-                subscriber.setAddress(rs.getString("address"));
-                return subscriber;
-            }
-        }
-        return null;
+        return  subscribers;
     }
 
     public void deleteById(int subscriberId) throws SQLException {

@@ -1,5 +1,6 @@
 package Repository;
 
+import model.Author;
 import model.Book;
 
 import java.sql.Connection;
@@ -9,11 +10,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookLiaison implements BookDao {
-    private Connection connection;
+import static Repository.DBConnection.getConnection;
 
-    public BookLiaison(Connection connection) {
-        this.connection = connection;
+public class BookLiaison implements BookDao {
+    private static Connection connection;
+
+    private  static Connection getConnection(){
+        return DBConnection.getConnection();
     }
 
     public void insert(Book book) throws SQLException {
@@ -26,38 +29,26 @@ public class BookLiaison implements BookDao {
         }
     }
 
+
     public List<Book> findAll() throws SQLException {
         List<Book> books = new ArrayList<>();
-        String query = "SELECT * FROM Book";
+        try {
+            Connection connection = getConnection();
+            String query = "SELECT * FROM Book";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Book book = new Book();
-                book.setBookId(rs.getInt("book_id"));
-                book.setTitle(rs.getString("title"));
-                book.setAuthorId(rs.getInt("author_id"));
+            while (resultSet.next()) {
+                int bookId = resultSet.getInt("book_id");
+                String title = resultSet.getString("title");
+                int  authorId = resultSet.getInt("author_id");
+                Book book = new Book(bookId, title, authorId);
                 books.add(book);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return books;
-    }
-
-    public Book findById(int bookId) throws SQLException {
-        String query = "SELECT * FROM Book WHERE book_id = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, bookId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Book book = new Book();
-                book.setBookId(rs.getInt("book_id"));
-                book.setTitle(rs.getString("title"));
-                book.setAuthorId(rs.getInt("author_id"));
-                return book;
-            }
-        }
-        return null;
+        return  books;
     }
 
     public void deleteById(int bookId) throws SQLException {
@@ -69,6 +60,7 @@ public class BookLiaison implements BookDao {
         }
     }
 
+    @Override
     public void update(Book book) throws SQLException {
         String query = "UPDATE Book SET title = ?, author_id = ? WHERE book_id = ?";
 
@@ -79,4 +71,7 @@ public class BookLiaison implements BookDao {
             stmt.executeUpdate();
         }
     }
+
+
+
 }

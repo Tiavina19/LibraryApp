@@ -8,13 +8,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static Repository.DBConnection.getConnection;
+
 
 public class AuthorLiaison implements AuthorDao {
-    private Connection connection;
+    private static Connection connection;
 
-    public AuthorLiaison(Connection connection) {
-        this.connection = connection;
-    }
+    private static  Connection getConnection() { return DBConnection.getConnection();}
 
     public void insert(Author author) throws SQLException {
         String query = "INSERT INTO Author (name, gender) VALUES (?, ?)";
@@ -26,39 +26,28 @@ public class AuthorLiaison implements AuthorDao {
         }
     }
 
-    public List<Author> findAll() throws SQLException {
+    public List<Author> findAll() {
         List<Author> authors = new ArrayList<>();
-        String query = "SELECT * FROM Author";
+        try {
+            Connection connection = getConnection();
+            String query = "SELECT * FROM Author";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Author author = new Author();
-                author.setAuthorId(rs.getInt("author_id"));
-                author.setName(rs.getString("name"));
-                author.setGender(rs.getString("gender").charAt(0));
+            while (resultSet.next()) {
+                int authorId = resultSet.getInt("author_id");
+                String name = resultSet.getString("name");
+                char gender = resultSet.getString("sex").charAt(0);
+                Author author = new Author(authorId, name, gender);
                 authors.add(author);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return authors;
+        return  authors;
     }
 
-    public Author findById(int authorId) throws SQLException {
-        String query = "SELECT * FROM Author WHERE author_id = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, authorId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Author author = new Author();
-                author.setAuthorId(rs.getInt("author_id"));
-                author.setName(rs.getString("name"));
-                author.setGender(rs.getString("gender").charAt(0));
-                return author;
-            }
-        }
-        return null;
-    }
 
     public void deleteById(int authorId) throws SQLException {
         String query = "DELETE FROM Author WHERE author_id = ?";
@@ -71,10 +60,6 @@ public class AuthorLiaison implements AuthorDao {
 
     @Override
     public void update(int id, Author author) throws SQLException {
-
-    }
-
-    public void update(Author author) throws SQLException {
         String query = "UPDATE Author SET name = ?, gender = ? WHERE author_id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -84,6 +69,7 @@ public class AuthorLiaison implements AuthorDao {
             stmt.executeUpdate();
         }
     }
+
 }
 
 
