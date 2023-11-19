@@ -1,0 +1,9 @@
+#!/bin/bash
+
+export jdbc:postgresql://localhost:5432/library_management
+export DB_USER=postgres
+export DB_PASSWORD=tiavina
+export CLASSPATH=".:postgresql-42.6.0.jar"
+
+javac src/Main/java/Repository/*.java src/Main/java/model/*.java
+java -classpath "$CLASSPATH" -DDB_USER="$DB_USER" -DDB_PASSWORD="$DB_PASSWORD" src.prog3.Main
